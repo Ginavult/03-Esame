@@ -1,0 +1,32 @@
+03-Esame – Backend Sito Web Personale
+
+Studentessa: Gina Vultaggio
+
+Link al sito (versione locale):
+http://localhost:8888/03-Esame/
+
+Link al backend (login):
+http://localhost:8888/03-Esame/login.php
+
+Credenziali di accesso (utente admin):
+email: admin@example.com
+password: admin123
+
+Link al video dimostrativo:
+https://drive.google.com/file/d/1oLXq2nJ2Wc_mtx6cAtbx-YuWo8b4hzox/view?usp=share_link
+
+Descrizione del progetto:
+Il progetto comprende un sito personale responsive con le pagine:
+- Home
+- Chi Sono
+- Lavori
+- Contatti
+
+Il backend protetto da login permette di:
+- Visualizzare, inserire, modificare ed eliminare utenti
+- Visualizzare, inserire, modificare ed eliminare categorie
+- Visualizzare, inserire, modificare ed eliminare lavori
+
+Tutti i moduli sono validati lato client e lato server.
+Il frontend legge i dati direttamente dal database MySQL.
+È incluso il file 03-Esame.sql con il backup completo del database.
