@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:8889
--- Creato il: Nov 13, 2025 alle 13:02
+-- Creato il: Nov 19, 2025 alle 13:37
 -- Versione del server: 8.0.40
 -- Versione PHP: 8.3.14
 
@@ -129,7 +129,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT per la tabella `works`
 --
 ALTER TABLE `works`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- Limiti per le tabelle scaricate

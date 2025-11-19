@@ -16,14 +16,48 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action'] ?? '')==='create') 
   $category_id = isset($_POST['category_id']) && $_POST['category_id']!=='' ? (int)$_POST['category_id'] : null;
   $published = isset($_POST['published']) ? 1 : 0;
 
-  // validazione server
-  if (!validate_required($title, 2, 150)) $err = 'Titolo obbligatorio (2-150).';
-  if (!$err && $image_url && !filter_var($image_url, FILTER_VALIDATE_URL)) $err = 'URL immagine non valida.';
-  if (!$err && $link_url && !filter_var($link_url, FILTER_VALIDATE_URL)) $err = 'URL progetto non valida.';
+  // validazione server (BASE)
+  if (!validate_required($title, 2, 150)) {
+    $err = 'Titolo obbligatorio (2-150).';
+  }
+  if (!$err && $image_url && !filter_var($image_url, FILTER_VALIDATE_URL)) {
+    $err = 'URL immagine non valida.';
+  }
+  if (!$err && $link_url && !filter_var($link_url, FILTER_VALIDATE_URL)) {
+    $err = 'URL progetto non valida.';
+  }
+
+  // di base usiamo l'URL se compilato
+  $imagePath = $image_url;
+
+  // --- UPLOAD IMMAGINE (se è stato scelto un file) --- //
+  if (!$err && !empty($_FILES['image']['name'])) {
+    $upload_dir = __DIR__ . '/uploads/';
+    if (!is_dir($upload_dir)) {
+      mkdir($upload_dir, 0777, true);
+    }
+
+    $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
+    $allowed = ['jpg','jpeg','png','gif','webp'];
+
+    if (!in_array($ext, $allowed)) {
+      $err = 'Formato immagine non valido. Usa jpg, jpeg, png, gif o webp.';
+    } else {
+      $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/','', $_FILES['image']['name']);
+      $target = $upload_dir . $filename;
+
+      if (move_uploaded_file($_FILES['image']['tmp_name'], $target)) {
+        // percorso RELATIVO che salviamo nel DB
+        $imagePath = 'uploads/' . $filename;
+      } else {
+        $err = 'Errore nel caricamento dell\'immagine.';
+      }
+    }
+  }
 
   if (!$err) {
+    // slug unico
     $slug = slugify($title);
-    // assicurati slug unico
     $i=0; $base=$slug;
     while (true) {
       $q=$pdo->prepare("SELECT 1 FROM works WHERE slug=?");
@@ -33,10 +67,11 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action'] ?? '')==='create') 
     }
 
     $stmt = $pdo->prepare("INSERT INTO works (title, slug, description, image_url, link_url, category_id, published) VALUES (?,?,?,?,?,?,?)");
-    $stmt->execute([$title,$slug,$description,$image_url,$link_url,$category_id,$published]);
+    $stmt->execute([$title,$slug,$description,$imagePath,$link_url,$category_id,$published]);
     $ok = 'Lavoro creato.';
   }
 }
+
 
 // DELETE (POST)
 if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action'] ?? '')==='delete') {
@@ -55,6 +90,7 @@ if (isset($_GET['edit'])) {
   $edit = $st->fetch();
 }
 
+// UPDATE
 if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action'] ?? '')==='update') {
   check_csrf();
   $id = (int)($_POST['id'] ?? 0);
@@ -65,11 +101,46 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action'] ?? '')==='update') 
   $category_id = isset($_POST['category_id']) && $_POST['category_id']!=='' ? (int)$_POST['category_id'] : null;
   $published = isset($_POST['published']) ? 1 : 0;
 
-  if (!validate_required($title, 2, 150)) $err = 'Titolo obbligatorio (2-150).';
-  if (!$err && $image_url && !filter_var($image_url, FILTER_VALIDATE_URL)) $err = 'URL immagine non valida.';
-  if (!$err && $link_url && !filter_var($link_url, FILTER_VALIDATE_URL)) $err = 'URL progetto non valida.';
+  // validazione server
+  if (!validate_required($title, 2, 150)) {
+    $err = 'Titolo obbligatorio (2-150).';
+  }
+  if (!$err && $image_url && !filter_var($image_url, FILTER_VALIDATE_URL)) {
+    $err = 'URL immagine non valida.';
+  }
+  if (!$err && $link_url && !filter_var($link_url, FILTER_VALIDATE_URL)) {
+    $err = 'URL progetto non valida.';
+  }
+
+  // partiamo dall'URL esistente (che può contenere già "uploads/...")
+  $imagePath = $image_url;
+
+  // --- UPLOAD IMMAGINE (se l'utente ha scelto un nuovo file) --- //
+  if (!$err && !empty($_FILES['image']['name'])) {
+    $upload_dir = __DIR__ . '/uploads/';
+    if (!is_dir($upload_dir)) {
+      mkdir($upload_dir, 0777, true);
+    }
+
+    $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
+    $allowed = ['jpg','jpeg','png','gif','webp'];
+
+    if (!in_array($ext, $allowed)) {
+      $err = 'Formato immagine non valido. Usa jpg, jpeg, png, gif o webp.';
+    } else {
+      $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/','', $_FILES['image']['name']);
+      $target = $upload_dir . $filename;
+
+      if (move_uploaded_file($_FILES['image']['tmp_name'], $target)) {
+        $imagePath = 'uploads/' . $filename;
+      } else {
+        $err = 'Errore nel caricamento dell\'immagine.';
+      }
+    }
+  }
 
   if (!$err) {
+    // slug unico: escludiamo il record stesso
     $slug = slugify($title);
     $i=0; $base=$slug;
     while (true) {
@@ -78,12 +149,14 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['action'] ?? '')==='update') 
       if (!$q->fetch()) break;
       $i++; $slug = $base.'-'.$i;
     }
+
     $stmt = $pdo->prepare("UPDATE works SET title=?, slug=?, description=?, image_url=?, link_url=?, category_id=?, published=? WHERE id=?");
-    $stmt->execute([$title,$slug,$description,$image_url,$link_url,$category_id,$published,$id]);
+    $stmt->execute([$title,$slug,$description,$imagePath,$link_url,$category_id,$published,$id]);
     $ok = 'Lavoro aggiornato.';
-    $edit = null; // esci da modalità edit
+    $edit = null;
   }
 }
+
 
 // elenco + categorie
 $works = $pdo->query("SELECT w.*, c.name AS category FROM works w LEFT JOIN categories c ON c.id=w.category_id ORDER BY w.created_at DESC")->fetchAll();
@@ -101,8 +174,8 @@ include 'header.php';
 
     <!-- FORM: Create / Update -->
     <div class="portfolio-preview" style="background:#fff;border-radius:12px;padding:1.25rem;box-shadow:0 8px 20px rgba(0,0,0,.06);margin-bottom:1rem;">
-      <form method="post" class="contact" style="background:transparent;padding:0;max-width:none">
-        <?php csrf_field(); ?>
+    <form method="post" enctype="multipart/form-data" class="contact" style="background:transparent;padding:0;max-width:none">
+    <?php csrf_field(); ?>
         <input type="hidden" name="action" value="<?= $edit ? 'update' : 'create' ?>">
         <?php if($edit): ?><input type="hidden" name="id" value="<?= (int)$edit['id'] ?>"><?php endif; ?>
 
@@ -112,17 +185,22 @@ include 'header.php';
         <input type="url" name="image_url" placeholder="URL immagine (es. https://...)"
                value="<?= e($edit['image_url'] ?? '') ?>">
 
+<label style="text-align:left; font-size:.9rem; color:#555;">Oppure carica un'immagine</label>
+<input type="file" name="image">
+
+
         <input type="url" name="link_url" placeholder="URL progetto (opzionale)"
                value="<?= e($edit['link_url'] ?? '') ?>">
 
-        <select name="category_id">
-          <option value="">Senza categoria</option>
-          <?php foreach($cats as $c): ?>
-            <option value="<?= (int)$c['id'] ?>" <?= (!empty($edit['category_id']) && $edit['category_id']==$c['id'])?'selected':'' ?>>
-              <?= e($c['name']) ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
+               <select name="category_id" class="backend-select">
+  <option value="">Senza categoria</option>
+  <?php foreach($cats as $c): ?>
+    <option value="<?= (int)$c['id'] ?>" <?= (!empty($edit['category_id']) && $edit['category_id']==$c['id'])?'selected':'' ?>>
+      <?= e($c['name']) ?>
+    </option>
+  <?php endforeach; ?>
+</select>
+
 
         <textarea name="description" placeholder="Descrizione" rows="4"><?= e($edit['description'] ?? '') ?></textarea>
 
@@ -137,38 +215,42 @@ include 'header.php';
         <?php endif; ?>
       </form>
     </div>
+<!-- TABELLA GRANDI LAVORI -->
+<div class="portfolio-preview" style="background:#fff;border-radius:12px;padding:1.25rem;box-shadow:0 8px 20px rgba(0,0,0,.06);">
+  <div style="padding:0">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Titolo</th>
+          <th>Categoria</th>
+          <th>Pubblicato</th>
+          <th>Azioni</th>
+        </tr>
+      </thead>
+      <tbody>
+      <?php foreach($works as $w): ?>
+        <tr>
+          <td><?= (int)$w['id'] ?></td>
+          <td><?= e($w['title']) ?></td>
+          <td><?= e($w['category'] ?? '—') ?></td>
+          <td><?= $w['published'] ? '✅' : '—' ?></td>
+          <td>
+            <a class="cta-button" style="text-decoration:none" href="works.php?edit=<?= (int)$w['id'] ?>">Modifica</a>
+            <form method="post" style="display:inline" onsubmit="return confirm('Eliminare questo lavoro?');">
+              <?php csrf_field(); ?>
+              <input type="hidden" name="action" value="delete">
+              <input type="hidden" name="id" value="<?= (int)$w['id'] ?>">
+              <input type="submit" value="Elimina" style="background:#ff4f81;color:#fff">
+            </form>
+          </td>
+        </tr>
+      <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+</div>
 
-    <!-- TABELLA -->
-    <div class="portfolio-preview" style="background:#fff;border-radius:12px;padding:1.25rem;box-shadow:0 8px 20px rgba(0,0,0,.06);">
-      <div class="container" style="padding:0">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>ID</th><th>Titolo</th><th>Categoria</th><th>Pubblicato</th><th>Azioni</th>
-            </tr>
-          </thead>
-          <tbody>
-          <?php foreach($works as $w): ?>
-            <tr>
-              <td><?= (int)$w['id'] ?></td>
-              <td><?= e($w['title']) ?></td>
-              <td><?= e($w['category'] ?? '—') ?></td>
-              <td><?= $w['published'] ? '✅' : '—' ?></td>
-              <td>
-                <a class="cta-button" style="text-decoration:none" href="works.php?edit=<?= (int)$w['id'] ?>">Modifica</a>
-                <form method="post" style="display:inline" onsubmit="return confirm('Eliminare questo lavoro?');">
-                  <?php csrf_field(); ?>
-                  <input type="hidden" name="action" value="delete">
-                  <input type="hidden" name="id" value="<?= (int)$w['id'] ?>">
-                  <input type="submit" value="Elimina" style="background:#ff4f81;color:#fff">
-                </form>
-              </td>
-            </tr>
-          <?php endforeach; ?>
-          </tbody>
-        </table>
-      </div>
-    </div>
 
   </div>
 </section>

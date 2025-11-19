@@ -1,3 +1,4 @@
+
 /* === VARIABILI === */
 /* === RESET === */
 * {
@@ -467,3 +468,91 @@ input.invalid, textarea.invalid { border: 2px solid #ff4f81; outline: none; }
 .topbar-admin { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
 .badge-user { background:#1f2326; border:1px solid #2b2f33; padding:6px 10px; border-radius:999px; font-size:12px; color:#9aa0a6; }
 input.invalid, textarea.invalid { border: 1px solid #ff4f81; outline: none; }
+
+.backend-select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #d1d1d1;
+  background: #ffffff;
+  font-size: 16px;
+  margin-bottom: 16px;
+  color: #555 !important; 
+  font-family: inherit;
+}
+
+
+.backend-select option {
+  color: #666 !important;       
+  background: #ffffff !important; 
+  font-family: inherit !important;
+}
+
+/* Tabella grande backend lavori */
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+  font-size: 0.95rem;
+}
+
+.admin-table thead th {
+  text-align: left;
+  padding: 10px 12px;
+  background: #f5f5f7;
+  color: #555;
+  font-weight: 600;
+}
+
+.admin-table tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.admin-table tbody tr:hover {
+  background: #fafafa;
+}
+
+.admin-table td .cta-button,
+.admin-table td form input[type=submit] {
+  font-size: 0.8rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+}
+/* Allineamento colonne tabella backend lavori */
+.admin-table th,
+.admin-table td {
+  text-align: left;
+  vertical-align: middle;
+}
+
+/* Colonna ID  */
+.admin-table th:nth-child(1),
+.admin-table td:nth-child(1) {
+  width: 60px;
+}
+
+/* Colonna Titolo */
+.admin-table th:nth-child(2),
+.admin-table td:nth-child(2) {
+  width: 40%;
+}
+
+/* Colonna Categoria */
+.admin-table th:nth-child(3),
+.admin-table td:nth-child(3) {
+  width: 25%;
+}
+
+/* Colonna Pubblicato */
+.admin-table th:nth-child(4),
+.admin-table td:nth-child(4) {
+  width: 100px;
+  text-align: center;
+}
+
+/* Colonna Azioni */
+.admin-table th:nth-child(5),
+.admin-table td:nth-child(5) {
+  width: 220px;
+}

@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "titolo": "Sito Fitness",
+    "descrizione": "Sviluppo di un sito responsive per personal trainer con area riservata.",
+    "img": "img/pc.jpeg"
+  },
+  {
+    "id": 2,
+    "titolo": "E-commerce Abbigliamento",
+    "descrizione": "Realizzazione di uno shop online con carrello e pagamenti sicuri.",
+    "img": "img/pc.jpeg"
+  },
+  {
+    "id": 3,
+    "titolo": "Landing Page Evento",
+    "descrizione": "Pagina promozionale per un evento con form di iscrizione.",
+    "img": "img/pc.jpeg"
+  }
+]
