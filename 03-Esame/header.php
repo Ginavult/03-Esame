@@ -32,6 +32,13 @@
           <li><a href="chi_sono.php" title="Scopri chi sono">Chi Sono</a></li>
           <li><a href="lavori.php" title="Visualizza i miei lavori">Lavori</a></li>
           <li><a href="contatti.php" title="Vai ai contatti">Contatti</a></li>
+          <?php if (!empty($_SESSION['user_id'])): ?>
+      <!-- SE SONO LOGGATA: mostra Logout -->
+      <li><a href="logout.php">Logout</a></li>
+    <?php else: ?>
+      <!-- SE NON SONO LOGGATA: mostra Login -->
+      <li><a href="login.php">Login</a></li>
+    <?php endif; ?>
         </ul>
       </nav>
     </div>

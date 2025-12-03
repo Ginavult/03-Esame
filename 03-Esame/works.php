@@ -182,13 +182,19 @@ include 'header.php';
         <input type="text" name="title" placeholder="Titolo *" required minlength="2" maxlength="150"
                value="<?= e($edit['title'] ?? '') ?>">
 
-        <input type="url" name="image_url" placeholder="URL immagine (es. https://...)"
-               value="<?= e($edit['image_url'] ?? '') ?>">
+        <!-- URL immagine -->
+<label style="text-align:left; font-size:.9rem; color:#555;">URL immagine</label>
+<input type="url" name="image_url" id="image_url"
+       placeholder="https://..."
+       value="<?= e($edit['image_url'] ?? '') ?>">
 
-<label style="text-align:left; font-size:.9rem; color:#555;">Oppure carica un'immagine</label>
-<input type="file" name="image">
+<!-- Oppure upload -->
+<label style="text-align:left; font-size:.9rem; color:#555; margin-top:10px;">Oppure carica un'immagine</label>
+<input type="file" name="image" id="image_file">
 
-
+<small id="image_hint" class="meta">
+  Puoi inserire un URL oppure caricare un file immagine (scegline uno).
+</small>
         <input type="url" name="link_url" placeholder="URL progetto (opzionale)"
                value="<?= e($edit['link_url'] ?? '') ?>">
 
@@ -254,5 +260,39 @@ include 'header.php';
 
   </div>
 </section>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const urlInput  = document.getElementById('image_url');
+  const fileInput = document.getElementById('image_file');
+  const hint      = document.getElementById('image_hint');
+
+  if (!urlInput || !fileInput || !hint) return;
+
+  function updateState() {
+    const hasUrl  = urlInput.value.trim() !== '';
+    const hasFile = fileInput.value !== '';
+
+    if (hasUrl && !hasFile) {
+      fileInput.disabled = true;
+      hint.textContent = 'Hai scelto un URL. Per usare un file, svuota l’URL.';
+    } else if (!hasUrl && hasFile) {
+      urlInput.disabled = true;
+      hint.textContent = 'Hai scelto un file. Per usare un URL, rimuovi il file.';
+    } else if (!hasUrl && !hasFile) {
+      urlInput.disabled = false;
+      fileInput.disabled = false;
+      hint.textContent = 'Puoi scegliere URL o file (uno solo).';
+    } else {
+      fileInput.disabled = true;
+      hint.textContent = 'Stai usando l’URL. Per usare un file, svuota prima l’URL.';
+    }
+  }
+
+  urlInput.addEventListener('input', updateState);
+  fileInput.addEventListener('change', updateState);
+
+  updateState();
+});
+</script>
 
 <?php include 'footer.php'; ?>
